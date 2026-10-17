@@ -1,0 +1,10 @@
+/* This repo's whole design surface — the three tokens @graphlearning/shell leaves to the repo.
+   Imported AFTER the shell's stylesheet in main.tsx, so these win the cascade.
+
+   Teal for the warehouse (the catalog card and the thumbnail gradient use the same anchor, so app
+   and catalog match), a lighter tint as --brand-hover, and amber as the counter tone. */
+:root {
+  --brand: #0d9488; /* the subject's identity colour */
+  --brand-hover: #56b4ac; /* a lighter tint — the eyebrow's hover state */
+  --accent-2: #f59e0b; /* the counter tone — the slide's `###` subheading */
+}

@@ -1,0 +1,16 @@
+{
+  "_comment": "Curated publish titles (YouTube title + thumbnail header) per course, keyed by course id. Search-first: what someone would actually type, never 'Course 4'. One entry per course in src/content/index.ts.",
+  "demo": "How A GraphL Section Is Built",
+  "architecture": "Data Warehouse Architecture Explained: OLTP vs OLAP, Lake, Lakehouse",
+  "requirements": "Data Warehouse Requirements: Metric Definitions and Data Contracts",
+  "dimensions": "Dimensional Modeling: Grain, Star Schema and Surrogate Keys",
+  "facts": "Fact Tables Explained: Snapshots, Additive Measures and Aggregation",
+  "history": "Slowly Changing Dimensions: Type 1, Type 2 and Late-Arriving Data",
+  "integration": "Conformed Dimensions, Bus Matrix and Data Vault Compared",
+  "ingestion": "ETL vs ELT and Change Data Capture (CDC) Explained",
+  "loading": "Idempotent Data Loads, Backfills and Atomic Publication",
+  "semantics": "Analytical SQL and Semantic Layers: Fan-Out, Windows and Metrics",
+  "physical": "Data Warehouse Performance: Columnar Storage, Partitioning and Query Plans",
+  "governance": "Data Quality, Lineage and Access Control in a Data Warehouse",
+  "operations": "Operating a Data Warehouse: Incidents, Recovery and Migration"
+}

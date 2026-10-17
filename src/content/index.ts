@@ -3,6 +3,7 @@ import { requirements } from './requirements'
 import { dimensions } from './dimensions'
 import { facts } from './facts'
 import { history } from './history'
+import { integration } from './integration'
 import type { Course, Section } from './types'
 
 // Course registry, in syllabus order. Courses are added here as each is authored.
@@ -12,6 +13,7 @@ export const COURSES: Record<string, Course> = {
   [dimensions.id]: dimensions,
   [facts.id]: facts,
   [history.id]: history,
+  [integration.id]: integration,
 }
 
 export type { Course, Section }

@@ -5,6 +5,7 @@ import { facts } from './facts'
 import { history } from './history'
 import { integration } from './integration'
 import { ingestion } from './ingestion'
+import { loading } from './loading'
 import type { Course, Section } from './types'
 
 // Course registry, in syllabus order. Courses are added here as each is authored.
@@ -16,6 +17,7 @@ export const COURSES: Record<string, Course> = {
   [history.id]: history,
   [integration.id]: integration,
   [ingestion.id]: ingestion,
+  [loading.id]: loading,
 }
 
 export type { Course, Section }

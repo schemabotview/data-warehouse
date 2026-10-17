@@ -9,6 +9,7 @@ import { loading } from './loading'
 import { semantics } from './semantics'
 import { physical } from './physical'
 import { governance } from './governance'
+import { operations } from './operations'
 import type { Course, Section } from './types'
 
 // Course registry, in syllabus order. Courses are added here as each is authored.
@@ -24,6 +25,7 @@ export const COURSES: Record<string, Course> = {
   [semantics.id]: semantics,
   [physical.id]: physical,
   [governance.id]: governance,
+  [operations.id]: operations,
 }
 
 export type { Course, Section }

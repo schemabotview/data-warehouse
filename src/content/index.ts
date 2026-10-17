@@ -1,6 +1,7 @@
 import { architecture } from './architecture'
 import { requirements } from './requirements'
 import { dimensions } from './dimensions'
+import { facts } from './facts'
 import type { Course, Section } from './types'
 
 // Course registry, in syllabus order. Courses are added here as each is authored.
@@ -8,6 +9,7 @@ export const COURSES: Record<string, Course> = {
   [architecture.id]: architecture,
   [requirements.id]: requirements,
   [dimensions.id]: dimensions,
+  [facts.id]: facts,
 }
 
 export type { Course, Section }

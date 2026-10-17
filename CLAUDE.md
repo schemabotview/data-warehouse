@@ -28,7 +28,7 @@ Routes are `#/<course>-<section>`; `#/` is the catalog; `?capture=1` exposes
 
 Every course reuses one synthetic retailer dataset (`src/scenes/shared/retail.ts`). Engine-specific
 claims (PostgreSQL 18, Fabric, Debezium) are labelled on the frame as examples, never as
-cross-engine guarantees. The demo course stays only until the first real course lands.
+cross-engine guarantees. The template demo course has been removed.
 
 ## Invariants — do not break
 

@@ -71,10 +71,10 @@ are exempt from the leaf budget).
 | --- | --- | --- | --- | --- | --- |
 | 1 | business-decisions | `question-to-answer` | D | `question` | "net revenue last month?" traced source→consumer, TB so it binds on height |
 | 2 | oltp-vs-olap | `two-workloads` | T+C | `scan` | point lookup vs analytical scan, two code cards over row/column sketch |
-| 3 | warehouse-mart-lake | `four-arrangements` | D | `lakehouse` | 2×2 containers, ownership boundary per container |
-| 4 | logical-layers | `layers` ↺ | D+W | `serve` | layer stack + warn: "a label is not a quality guarantee" |
-| 5 | service-expectations | `expectations` | L+W | `freshness` | useful daily report vs current-state replica that loses history |
-| 6 | roles-and-tradeoffs | `layers` ↺ | D | `owners` | same board, owners lit; closes with Outcome + Bridge |
+| 3 | warehouse-mart-lake | `four-arrangements` | D | `lakehouse` | 2×2 of holds / owner / history / quality, plus the usual lake → warehouse → marts mix below |
+| 4 | logical-layers | `layers` ↺ | D+W | `serve` | sources → layers → boundary checks → owners, warn: "'gold' is a name" |
+| 5 | service-expectations | `expectations` | L+L+L | `replica` | daily report vs live replica (warn), over the stated expectations |
+| 6 | roles-and-tradeoffs | `layers` ↺ | D | `roles` | same board, owners lit; closes with Outcome + Bridge |
 
 ### 2 · requirements
 | # | Section id | Scene | Shape | Focus | Density note |
@@ -237,6 +237,23 @@ the screenshot:
 5. Narration: 130–180 words of flowing prose (≈ 55–75 s), same idea as the slide, never the bullets
    read aloud.
 
+**Calibrated on the pilot (course 1)**
+
+- The `check` model **over-estimates** a bullet-heavy slide by ~60–140 px: it counts a bullet of
+  50–55 chars as two lines where it renders as one. With the 1000 px modelled cap that leaves a
+  narrow rendered window, **≈ 865–930 px**. Author to **920–990 modelled**, then read the
+  rendered number off `npm run density`.
+- When the cap and the floor collide, shorten bullets that sit at 50–55 chars to under ~48 — the
+  model drops a line, the render does not move — and spend the freed budget on one more real point.
+- The binding axis reads **89 %** on every frame: that is the shell's fit padding, so the axis
+  target is always met and **area is the measure that moves**.
+- A 2×2 of containers with two cards each landed at 23 % area. What fixed it was content the
+  slide already asked for (history and quality per arrangement, and how they combine), not padding.
+- Helpers that build nodes (`children: rows.map(...)`) hide ids and labels from `check`: focus
+  and card budgets are only guarded on literal node objects. Write nodes out.
+- `kind: 'list'` is not exempt in `check`'s leaf model, so a list's `label`/`sub` must fit the
+  leaf budget too.
+
 **Per-course gate** (before a course is handed over):
 `npm run build && npx tsc --noEmit && npm run check && npm run density <course>` with every frame
 inside target or its deviation named in the hand-over (a deliberately sparse board is allowed, but
@@ -247,7 +264,7 @@ said out loud), plus a contact sheet of all its screenshots.
 | Phase | Work | Hand-over |
 | --- | --- | --- |
 | 0 ✓ | Scaffold from `content-repo-template`, identity swaps (slug `data-warehouse`, teal `#0d9488` / amber), titles, concept.json, density script | this commit |
-| 1 | `shared/retail.ts` dataset + course 1 `architecture` as the **pilot**; calibrate the slide floor and the shape levers on real frames; delete the demo course in the same change | route + density table + contact sheet |
+| 1 ✓ | `shared/retail.ts` dataset + course 1 `architecture` as the **pilot**; slide floor and shape levers calibrated on real frames (§5); demo course deleted | 6/6 frames inside targets |
 | 2 | Courses 2–4 (requirements → facts): the modelling core, heaviest in tables | one course per hand-over |
 | 3 | Courses 5–8 (history → loading): code+table composites | 〃 |
 | 4 | Courses 9–12 (semantics → operations) | 〃 |

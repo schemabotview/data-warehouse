@@ -4,6 +4,15 @@ import type { SceneNode } from '@graphlearning/flow'
 // fulfilment events and daily inventory. All values are synthetic. Money carries its currency and
 // every date is ISO, so no frame ever has to assume either.
 //
+// The canonical timeline every frame agrees with (shop time zone Europe/London):
+//   1041  C-201  ordered 09-03  Kettle 34.00 + Mug ×4 18.00  shipped 09-04/05  delivered 09-05/06
+//                               line 2 (the mugs) returned 09-19, refunded 18.00
+//   1042  C-202  ordered 09-14  Toaster 49.00               shipped 09-15     delivered 10-02
+//   1043  —      ordered 09-21  Mug ×4 9.00                 packed 09-22      shipped 10-03
+//   1044  C-201  ordered 09-30  Kettle, paid 39.90 EUR = 34.00 GBP           shipped 10-01
+//   1045  C-207  ordered 10-01 local (09-30 23:20 UTC)  Toaster 49.00
+// So September is 144.00 booked, 101.00 shipped, 34.00 recognised (delivered, less returns).
+//
 // A node-factory module, not a scene — it declares no Scene, so `npm run check` treats its node ids
 // as in scope for every scene that spreads them.
 

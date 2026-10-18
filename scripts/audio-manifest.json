@@ -1,0 +1,497 @@
+{
+  "count": 82,
+  "entries": [
+    {
+      "course": "architecture",
+      "section": "business-decisions",
+      "file": "architecture/business-decisions.wav",
+      "narration": "Every warehouse starts with a decision someone needs to make. Here the question is simple to say: what was net merchandise revenue last month? Answering it is not simple. The evidence lives in operational systems, in orders, order lines and returns, which were built to take orders, not to explain them. So the data is copied out by ingestion, without slowing the shop down. Integration then applies one agreed definition of net, in one currency, before tax and after returns, and it keeps every past month answerable. Finally, a serving model, here a sales star, is published in a shape the report can query directly. Notice what makes this an analytical workload. It reads months of history rather than one live order, and it has to give the same answer every time someone asks. That only happens when every step along this path has an owner who can say what correct means."
+    },
+    {
+      "course": "architecture",
+      "section": "oltp-vs-olap",
+      "file": "architecture/oltp-vs-olap.wav",
+      "narration": "On the left is the work an operational system is built for. A checkout updates one order, found by its key, and moves on. It does this thousands of times a day, so it touches as few rows as it can, and it simply overwrites the old status. That is exactly right for running a shop. On the right is an analytical question over the same data. It reads every order line, but only three of its columns, and adds them up by month. It needs September to stay September next year, which means old values cannot be overwritten. And notice the October row: the month is still open, so its total is partial, and a good answer says so. These two shapes of work pull in opposite directions. Narrow, normalised, current tables suit the first. Wide, historical, read-optimised tables suit the second. That tension is why analysis usually runs beside the operational system rather than inside it."
+    },
+    {
+      "course": "architecture",
+      "section": "warehouse-mart-lake",
+      "file": "architecture/warehouse-mart-lake.wav",
+      "narration": "These four words get used as if they were stages, as if every company graduates from a warehouse to a lake to a lakehouse. They are better read as arrangements that overlap. A warehouse holds integrated, modelled tables shared across the business, usually with a central team owning the common definitions. A mart is a slice for one subject area, like sales, often owned by the department that asks its questions. A lake stores files in open formats first and leaves modelling for later, which is flexible, but the platform team that runs it owns storage, not meaning. A lakehouse adds table behaviour on top of those files: transactions, schemas and SQL. That is useful, but it still needs someone to own every definition. Real platforms mix these freely. So when you meet one, skip the label and ask two questions. Who owns the definitions and the data? And where are history and quality actually handled?"
+    },
+    {
+      "course": "architecture",
+      "section": "logical-layers",
+      "file": "architecture/logical-layers.wav",
+      "narration": "Most warehouses move data through a few logical layers, and the names change from team to team: raw, stage and mart, or bronze, silver and gold. What matters is the job each layer does. Landing keeps a raw copy, exactly as the source sent it, so you can always go back. Staging types the columns, removes duplicates and records which load each row came from. Integration conforms keys across sources, applies business rules and keeps history. Serving publishes stars and marts in the shape people ask questions in. The sources themselves are only ever read. Now the part that is easy to forget. A layer's name tells you what it is supposed to hold, not whether it holds it correctly. Calling a schema gold proves nothing. The evidence is the checks that ran at each boundary: did the row counts land, are the keys unique at the declared grain, do the served totals agree with the source? Those checks, and the people who answer for them, are what earn trust."
+    },
+    {
+      "course": "architecture",
+      "section": "service-expectations",
+      "file": "architecture/service-expectations.wav",
+      "narration": "Here are two reports built from the same orders. The daily report is loaded overnight. It is a day behind, but it says so, it keeps every past month, and its totals are reconciled back to the source. The live replica looks better at first: it is only seconds behind the shop. But it copies the current state, so every update overwrites what was there before. Ask it which region a customer lived in last March, and the answer is simply gone. Fresher is not the same as more useful. What users actually need is a stated service. How fresh: complete up to when, and ready by what time. How complete: which sources and which periods are in. Who may see which rows and columns. And what that level of freshness costs to run. These belong together, because tightening one usually loosens another. And each needs two named owners: someone in the business who agrees the target, and someone technical who keeps it."
+    },
+    {
+      "course": "architecture",
+      "section": "roles-and-tradeoffs",
+      "file": "architecture/roles-and-tradeoffs.wav",
+      "narration": "Here is the same layered path, now with the people attached. A business owner decides what a metric means and accepts the number. A data engineer owns getting data in, loading it, and recovering when that fails. An analytics engineer owns the models, the tests and the shared definitions. A platform owner owns compute, access and what it all costs. Some teams merge these roles, but none of the responsibilities disappears. That matters when you meet an architecture claim, such as one design being faster or cheaper. A benchmark is evidence about the workload it measured, not about yours. So ask what the design costs you in freshness, in ownership, and in day-to-day operation. That is the outcome of this course: being able to explain a warehouse in terms of the decisions it serves, the workloads it carries, how data moves through it, and the trade-offs someone chose. Next, the architecture gets concrete, by making the question and its sources precise."
+    },
+    {
+      "course": "requirements",
+      "section": "metric-definitions",
+      "file": "requirements/metric-definitions.wav",
+      "narration": "Ask three people for last month's sales and you may get three numbers, all of them correct. Here are the same September order lines counted three ways. Booked sales count an order the moment it is placed, which gives one hundred and forty four pounds. Shipped sales wait until goods leave the warehouse, so the two orders that left in early October drop out, leaving one hundred and one. Recognised sales, under a finance policy, wait for delivery and subtract returns, and that leaves just thirty four pounds. Nobody made a mistake. They answered different questions. So before any table is designed, the metric needs a written definition. Which event is counted, and which date puts it in a month? Are returns dated back to the original sale, or on the day the goods come back? Is the amount before or after tax, and in which currency? This is an analytical definition, agreed with the people who use the number. It is not accounting advice, and where finance has a policy, the definition should point to it."
+    },
+    {
+      "course": "requirements",
+      "section": "source-profiling",
+      "file": "requirements/source-profiling.wav",
+      "narration": "A source table's column names tell you what it is supposed to hold. Profiling tells you what it actually holds, and the two are rarely the same. Here are six rows from the web shop's order extract. Order ten forty two appears twice, once in lower case and once in capitals, so the key that looks unique is not. Order ten forty three has no customer at all. The status column uses six spellings for five real states. Ten forty four is priced in euros, in a table everyone assumed was pounds. And ten forty five is simply missing, which might mean it is late, filtered out by the extract, or deleted at the source. You cannot tell which from here, and that is a finding too. Each of these will break an answer later if it is not found now. Record the findings with their provenance: which system, which extract, when it ran, and with what query. A profile result without that context cannot be checked again, and so it cannot be trusted."
+    },
+    {
+      "course": "requirements",
+      "section": "source-identity",
+      "file": "requirements/source-identity.wav",
+      "narration": "Every row describes some thing, and the first job is to say which. The order header has one row per order. It holds the customer and the freight charge. The order lines have one row per product, with the quantity and the price. They are related, one header to many lines, but they are different entities. Treat them as one, and freight gets repeated on every line and counted several times over. The second trap is identity. An order number is only unique inside the system that issued it. The marketplace runs its own numbering, and it also has an order ten forty two, for a completely different customer. Join the two sources on order id alone and those two orders silently merge into one. The fix is to qualify the key with its source, so web ten forty two and marketplace ten forty two stay distinct. And whenever someone says an identifier is globally unique, treat that as a claim to check against the data, not a fact to build on."
+    },
+    {
+      "course": "requirements",
+      "section": "event-boundaries",
+      "file": "requirements/event-boundaries.wav",
+      "narration": "Look at order ten forty one as its business process actually ran. It was placed, and it was paid. Those happened once, for the whole order. Then it was shipped, but not all at once: each line went out in its own parcel, on its own day, and was delivered separately. And two weeks later, one of those lines, the mugs, came back. So the process is a chain of events, and each event happens at a level, either the whole order or one line. That boundary matters. A line-level event cannot be stored on the order header without losing which line it belonged to. Each event also carries its own date, which can put it in a different month from the order. And a word like shipped hides a choice. Does an order count as shipped when its first parcel leaves, or only when its last one does? Write down which event closes each step, and at which level, before modelling anything from it."
+    },
+    {
+      "course": "requirements",
+      "section": "time-currency-status",
+      "file": "requirements/time-currency-status.wav",
+      "narration": "Most wrong totals are not caused by bad data. They come from an assumption nobody wrote down. Here are three order lines with every assumption turned into a column. Time first. Order ten forty five was placed at twenty past eleven at night, UTC, on the thirtieth of September. In London that was already October the first. The metric has to say whose clock decides the month. Currency next. Order ten forty four was paid in euros, and the metric must say which rate converts it, and from which date. Units: a pack of four mugs could count as one sale or as four items, and the two give very different averages. And status: which states count at all, and is a refund a negative row or a separate event? Skip these rules and the failures are predictable. Orders drift across month boundaries at midnight. Euros get added to pounds. And a harmless looking filter on positive quantities quietly removes every refund."
+    },
+    {
+      "course": "requirements",
+      "section": "source-contracts",
+      "file": "requirements/source-contracts.wav",
+      "narration": "The last step before design is to make the requirement testable. Start with acceptance examples: small cases with the answer agreed in advance. September's booked lines must total one hundred and forty four pounds. Order ten forty two, which the source sent twice, must be counted once. Ten forty four, paid in euros, must be converted at the rate for its order date. These examples are written before any table exists, and they are checked again after every load. Then capture what you are assuming about the source as a contract. This one is illustrative, not a standard format. It states the grain and the key, the allowed status values, the time zone, how late rows may arrive, how much notice a schema change needs, how long data is kept, and what it may be used for. But a contract in a file enforces nothing on its own. It needs every load to check it, and a named team that answers when it breaks. With the requirement bounded like this, the next course can declare the model's grain."
+    },
+    {
+      "course": "dimensions",
+      "section": "declaring-grain",
+      "file": "dimensions/declaring-grain.wav",
+      "narration": "Every fact table answers one question about itself: what does a single row represent? That answer is the grain, and it is declared first, in plain words, before any column is chosen. Here the grain is one row per order line: one product, on one order, as it was sold. That sentence immediately decides a lot. It tells you which dimensions can describe a row: the order date, the ship date, the customer, the product. It tells you which measures belong: the quantity and the net amount of that line. And it tells you what does not belong. Freight is charged once per order, so it has no honest place on a line row without an allocation rule. Choose the finest grain the source can support, because detail can always be summed up later, but a summary can never be split back down. Never mix grains in one table. Write the grain as a sentence, back it with a key that should be unique, and test that key on every load."
+    },
+    {
+      "course": "dimensions",
+      "section": "star-joins",
+      "file": "dimensions/star-joins.wav",
+      "narration": "A star schema rests on one promise. Every fact row joins to exactly one row in each dimension. Many fact rows can point at the same product, but that product appears in the dimension once. When the promise holds, joining a dimension only adds descriptive columns. It never adds rows, so totals stay the same however many dimensions you join. Now break the promise. A faulty load writes product key twelve twice, once under Kitchen and once under Small appliances. There are only two toaster lines in the fact table, but each now matches two dimension rows, so the join returns four. Ninety eight pounds of revenue is reported as one hundred and ninety six. And nothing complains. The query runs, the dashboard renders, and the number is simply wrong. That is why cardinality is annotated on every join in the design, and why a uniqueness test on each dimension key runs on every load, before anyone queries it."
+    },
+    {
+      "course": "dimensions",
+      "section": "surrogate-keys",
+      "file": "dimensions/surrogate-keys.wav",
+      "narration": "Every source system identifies its records somehow, and those identifiers are natural keys. The trouble is that they are only unique inside the system that issued them. In the web shop, K-zero-one is a kettle. In the marketplace, K-zero-one is a kitchen scale, and the marketplace's kettle is T-zero-two, which is the web shop's toaster. Join on the bare id and products quietly swap identities. The first fix is to qualify the natural key with its source. The second is to issue a surrogate key: a plain integer, owned by the warehouse, that means nothing outside it. Each source product gets its own key, and facts join on that key. The natural key is not thrown away. It stays in the dimension as an attribute, so you can still look a product up and trace it back. Surrogates also leave room for history, because one product can later have several versions, each with its own key. And if a source re-keys its catalogue, the change stays contained in one mapping table."
+    },
+    {
+      "course": "dimensions",
+      "section": "hierarchies",
+      "file": "dimensions/hierarchies.wav",
+      "narration": "Dimensions hold the descriptive words people use to slice numbers: product names, categories, regions. Often those words nest. A product belongs to a category, and a category belongs to a department. When every member has exactly one parent, the hierarchy is strict, and you can roll totals up level by level with confidence: the categories add up to the department. Here is where that breaks. The breakfast set is a kettle and mugs sold together, and merchandising lists it under both Kitchen and Tableware. Sum each category, then add the categories together, and the set is counted twice. The department shows three hundred and thirteen pounds, when only two hundred and fifty three was actually sold. There are honest ways out. Give each product one primary parent for reporting. Use a bridge table with weights that split it, so the shares add to one. Or keep both parents and show the overlap explicitly. What you cannot do is assume a hierarchy is strict because the diagram looks like a tree. Check it in the data."
+    },
+    {
+      "course": "dimensions",
+      "section": "role-playing-dates",
+      "file": "dimensions/role-playing-dates.wav",
+      "narration": "Dates deserve their own dimension. A raw date column tells you the day, but people ask about months, quarters, weekdays, holidays and fiscal periods, and those rules should be worked out once, in one table, not recomputed differently in every query. So the date dimension has one row per calendar day, with every attribute anyone groups by already filled in. If time of day matters, it goes in a separate, much smaller dimension, rather than multiplying the calendar by every minute. Now, a sales line has more than one date. It has the date it was ordered and the date it was shipped. Both are dates, so both point at the same date dimension, but through two different keys. That is a role-playing dimension: one physical table, playing two roles. The roles must be named clearly, because they answer different questions. Order ten forty four was ordered on the thirtieth of September and shipped on the first of October, so it belongs to September by one role and to October by the other."
+    },
+    {
+      "course": "dimensions",
+      "section": "junk-and-unknown",
+      "file": "dimensions/junk-and-unknown.wav",
+      "narration": "Most dimension keys point at a real thing, a customer or a product. A few patterns handle the rest. The order number is useful for drilling back to a source order, but it has no attributes worth a table of its own. So it stays on the fact row as a degenerate dimension. Then there are small flags: was it gift wrapped, was a promotion used, which channel did it come through. Giving each its own dimension clutters the star. A junk dimension holds every combination of those flags in one small table, and the fact carries a single key. Finally, the missing cases. Order ten forty three should have a customer, but the source lost it. That is unknown, and it points at a reserved member with key minus one. A stock adjustment has no customer at all, and never could. That is not applicable, key minus two. Keeping these as two separate members keeps their meanings apart. And never leave the key empty, because a null key drops the row from every inner join."
+    },
+    {
+      "course": "dimensions",
+      "section": "snowflake-tradeoffs",
+      "file": "dimensions/snowflake-tradeoffs.wav",
+      "narration": "The last modelling choice in this course is how far to normalise a dimension. Flattened, the product dimension is one wide table. Every product row repeats its category and its department. That repetition costs some storage, and renaming a category means rewriting every product in it. But a query needs only one join from the fact, and a person reading the model sees everything about a product in one place. Snowflaked, the same attributes are split into a chain of tables: products point at categories, and categories point at departments. Each name is stored once. In exchange, every query pays for extra joins, and the people using the model have more tables to find and understand. For serving models, readability usually wins, which is why flat dimensions are the common default. But the real cost depends on your workload and your engine, so measure it rather than assume it. You can now construct a star and explain its grain, its keys, its dimension roles, and what every join is expected to do. Next come the facts themselves."
+    },
+    {
+      "course": "facts",
+      "section": "transaction-facts",
+      "file": "facts/transaction-facts.wav",
+      "narration": "There are three basic shapes of fact table, and this course looks at all three on one board. The first is the transaction fact. It records one row per event, at the moment the event happened. Here, each row is one order line as it was sold: a kettle, two packs of mugs, a toaster. The rules are simple. A row is inserted once and is not updated afterwards. If something about a sale turns out to be wrong, the correction arrives as a new row, so the history of what was recorded stays intact. And if nothing happens, nothing is written: the table is sparse, with no row for a day when a product did not sell. Transaction facts are the workhorse. Their measures can be summed by any dimension, and they hold the finest detail available, which means the other patterns can often be derived from them. What they answer poorly is a question about state: how much stock is on the shelf, or how far an order has progressed. For those, we need the other two shapes."
+    },
+    {
+      "course": "facts",
+      "section": "periodic-snapshots",
+      "file": "facts/periodic-snapshots.wav",
+      "narration": "The second shape is the periodic snapshot. Instead of recording events, it measures a state at regular intervals. Here it is daily inventory: for every product, at every location, at the end of every day, how many units were on hand. Notice how different that is from the sales table. A snapshot row exists even when nothing moved that day, because the point is to record the level, and the level still had a value. Rows arrive on a schedule, so the size of the table is predictable: products times locations times days. Each row says what was true at that moment, not what happened. You might ask why we do not just add up every stock movement since the beginning of time. That is slow, and it is fragile, because a single missed movement makes every later balance wrong, with nothing to catch it. A counted balance is evidence on its own. So the strong design keeps both. Movements explain how the level changed. Snapshots pin down what the level actually was."
+    },
+    {
+      "course": "facts",
+      "section": "accumulating-snapshots",
+      "file": "facts/accumulating-snapshots.wav",
+      "narration": "The third shape is the accumulating snapshot. It follows one thing through a pipeline with known steps, and it gives that thing one row. Here the thing is an order, and the steps are placed, shipped and delivered, each with its own date column. When an order is placed, its row is created with only the first date filled in. As each milestone is reached, the same row is updated. The gaps between dates become measures in their own right. Order ten forty three was placed on the twenty first of September and did not ship until the third of October, so its days to ship is twelve. Empty dates mean not yet, which is different from never. This pattern needs careful definitions. An order with two parcels shipped twice, so the table must say that shipped means the last parcel. And because these rows change, unlike the other two patterns, keep an audit trail of their updates. Use it when the steps are fixed and well understood. It answers where everything is right now, and how long each stage took."
+    },
+    {
+      "course": "facts",
+      "section": "additivity",
+      "file": "facts/additivity.wav",
+      "narration": "Some numbers can be added up freely. Others only make sense when added in certain directions. Take stock on hand for kettles. On the thirtieth of September there were eleven in London and five in Manchester. Add them, and you get sixteen kettles in the business, which is a true statement. Now add the same measure across two days: twelve and five, then eleven and five. The result is thirty three, and it counts nothing real. The same kettles were simply counted twice. A balance is a level, not a flow. To summarise it over time, take the value at the end of the period, or the average over the period, and say which. So every measure declares its additivity. Additive measures, like quantity and net amount, can be summed over any dimension. Semi-additive measures, like balances, sum across locations or products but not across time. Non-additive measures, like unit prices and ratios, are never summed at all. They are recomputed from their parts. And no sum is valid across mixed units or currencies."
+    },
+    {
+      "course": "facts",
+      "section": "ratios-and-distinct",
+      "file": "facts/ratios-and-distinct.wav",
+      "narration": "A ratio looks like a single number, but it is really two measures divided. That changes how it can be aggregated. Here is September's return rate. First, the numerator and the denominator must describe the same population: returns of the lines sold in September, divided by those same lines. Then sum each part and divide once. Eighteen pounds returned out of one hundred and forty four pounds sold gives twelve and a half percent. The tempting alternative is to compute a rate for each product and average the rates. That gives twenty two percent, because a small product with one return now counts as much as a big product with none. The fix is structural: store the numerator and denominator as additive measures, and compute the ratio only at the end. Distinct counts have the same problem. Customer two oh one bought on two different days, so adding up daily distinct customers gives three, while the month only had two. Distinct counts must be recomputed at each level. And weighted averages need their weights carried along with them."
+    },
+    {
+      "course": "facts",
+      "section": "factless-facts",
+      "file": "facts/factless-facts.wav",
+      "narration": "Some fact tables contain no numbers at all, and they are still facts. The row itself records that something was true. This one records promotion coverage: which products were on which promotion, on which days. It does not say anything sold. It says what was eligible. That matters because of the kind of question it unlocks. A sales table can only describe what happened. It has no row for a toaster that sat on promotion and did not sell, because nothing happened. So ask the question as a difference. Take everything that was covered, and subtract everything that sold. What remains is the list of products that were promoted and ignored: both products on the twenty eighth, and the toaster on the thirtieth. Counting coverage rows also gives useful measures, like how many products were on offer each day. The same idea applies to events that carry no amount, such as attendance or sign ups. There, the event itself is the measure, and counting rows is how you add it up."
+    },
+    {
+      "course": "facts",
+      "section": "multiple-grains",
+      "file": "facts/multiple-grains.wav",
+      "narration": "Freight is charged once per order, but sales are recorded per line. Those are two grains, and freight has to be handled without breaking either one. There are two honest options. You can keep freight in its own fact table at the order grain, and combine it with line facts only after both have been aggregated. Or you can allocate it down to the lines using a documented rule. What you must never do is copy the header's freight onto every line. Order ten forty one had two lines, so four pounds ninety five quietly becomes nine pounds ninety. Here is an allocation by net value. The kettle line was thirty four of the fifty two pounds, so it takes sixty five point four percent of the freight, three pounds twenty four. The mugs take the rest, one pound seventy one. Then reconcile: the allocated amounts must add back to exactly what the header charged. Rounding can leave a penny over, so a rule decides which line absorbs it. And the allocation rule is a business choice, so record it alongside the data."
+    },
+    {
+      "course": "facts",
+      "section": "sparse-events",
+      "file": "facts/sparse-events.wav",
+      "narration": "The last point in this course is about absence. A missing row and a zero look alike in a report, but they say very different things. In the sales table, toasters have one row in this window, on the fourteenth. On the thirteenth and the fifteenth there is simply no row. That might mean nothing sold, or it might mean the sale was never captured. Joining to the date dimension turns those gaps into explicit zeros, which is useful, but it is an assumption that no row means no sale. Compare the inventory snapshot. Manchester counted its toasters on the fifteenth and found none. That zero was measured. The difference shows up in averages. Divide September's toaster sales by the rows present and you get forty nine pounds a day. Divide by the days in the month and you get one pound sixty three. Only the second answers the question. You can now choose a fact pattern and justify every aggregation, denominator and allocation. Next: what happens when the things we describe change over time."
+    },
+    {
+      "course": "history",
+      "section": "business-vs-processing-time",
+      "file": "history/business-vs-processing-time.wav",
+      "narration": "History starts with a distinction that sounds pedantic and is not. Every row carries two kinds of time. Business time is when something happened in the world: the parcel left, the customer moved, the goods came back. Processing time is when the warehouse found out: when the event was captured, and when it was loaded. Usually they are minutes apart, and nobody notices. Sometimes they are days or weeks apart, and then the difference decides which period a fact belongs to. Look at the return of the mugs from order ten forty one. The customer sent them back on the nineteenth of September, but the return was only captured on the second of October. Count by business time, and it is a September return. Count by load time, and it lands in October, which makes September look better than it really was. Neither clock is wrong, but they answer different questions. So keep both timestamps on the row, each with its time zone, and let the metric's definition state which clock places a fact in a period."
+    },
+    {
+      "course": "history",
+      "section": "scd-type1-type2",
+      "file": "history/scd-type1-type2.wav",
+      "narration": "Descriptions change. Customer C two oh one moved from the North region to the South on the twentieth of September. The dimension has to do something with that, and there are two basic policies. Type one overwrites. The region column is updated in place, and the customer is now South. That is simple, but it rewrites the past: every sale that customer ever made now reports as South, including the ones made while they lived in the North. Type one is exactly right for corrections, like a misspelt name, because the old value was never true. Type two keeps history. The North row is closed, a new South row is opened, and each version gets its own surrogate key, two oh one and then two oh eight. Facts carry the key of the version that was true when they happened, so sales before the move still report as North. The choice is made attribute by attribute. Version only what someone genuinely needs to see as it was, because every versioned attribute adds rows and load complexity."
+    },
+    {
+      "course": "history",
+      "section": "effective-intervals",
+      "file": "history/effective-intervals.wav",
+      "narration": "A Type two version is only useful if you can tell, for any moment, which version was in force. That is the job of the effective interval. Each version has a valid from and a valid to, and the convention that makes them behave is the half-open interval: a version applies from its start, inclusive, up to its end, exclusive. So the old North version ends at exactly the instant the new South version begins, and the twentieth of September belongs to the new version only, never both. The current version gets a far future end date, so it stays open until it is replaced. These rules are worth testing on every load. No overlaps: at any instant a customer has exactly one version. No gaps: every instant since the customer first appeared is covered. One current row per natural key. And each new version gets a new surrogate key, so facts can point at precisely one version. Finally, the interval is in business time, the date the change took effect, not the date the warehouse happened to load it."
+    },
+    {
+      "course": "history",
+      "section": "historical-lookup",
+      "file": "history/historical-lookup.wav",
+      "narration": "Once the dimension keeps versions, each fact has to be given the right one. The lookup happens when the fact is loaded. It matches the customer's natural key, and then it picks the version whose interval contains the fact's business date. Order ten forty one was placed on the third of September, while the customer was still in the North, so it gets key two oh one. Order ten forty four was placed on the thirtieth, after the move, so it gets key two oh eight. And a sale placed exactly on the twentieth falls cleanly into the new version, because the interval is half-open. Here are the two classic mistakes. If the intervals are closed at both ends, a sale on the boundary date matches both versions, and the join quietly doubles it. And if the lookup uses the load date instead of the business date, any late-arriving fact gets whatever version is current today. So test the result. Every fact should match exactly one version. Zero matches means a missing member, and that should be handled, never silently dropped."
+    },
+    {
+      "course": "history",
+      "section": "late-arrivals",
+      "file": "history/late-arrivals.wav",
+      "narration": "In a perfect world, a customer record would always arrive before that customer's first order. In practice the order of arrival is messy, and the load has to cope in both directions. First, the fact can arrive before its dimension member. This marketplace order for customer M ninety five landed on the third of October, but the marketplace customer feed would not deliver M ninety five until the fifth. One option is to point the fact at the Unknown member. The row is kept, but the link to M ninety five is lost, and every such fact must be found and re-pointed later. The better option is an inferred member: issue a real surrogate key now, two thirty, with placeholder attributes and a flag saying it was inferred. When the real record arrives, that row is completed in place, and the fact never needs to change. Second, a fact can arrive late. A September sale loaded in October still looks up its version by its own business date. But it may land in a month that was already reported, which raises the next question: restate, or adjust?"
+    },
+    {
+      "course": "history",
+      "section": "corrections-restatement",
+      "file": "history/corrections-restatement.wav",
+      "narration": "Sources do not just add new data. They correct old data. Order ten forty two turns out to have been priced wrong: it should have been forty five pounds, not forty nine, and the correction arrives on the sixth of October, after September was already reported. There are two policies. Restating changes September itself. It becomes one hundred and forty pounds, published as a new version with a note saying what changed. Adjusting leaves September exactly as it was reported, and records a minus four pound adjustment in October instead. Restating gives the truer picture of September. Adjusting keeps previously published numbers stable, which matters when they were already used for decisions. Either way, keep a record of who changed what, and when. Some changes need no rewrite at all. If only a grouping changed, like a product moving category, it can often be reclassified at query time. Deletions are a policy decision too: remove the row, flag it, or retain it. And whatever is decided must reach every derived copy: marts, extracts and caches included."
+    },
+    {
+      "course": "history",
+      "section": "point-in-time",
+      "file": "history/point-in-time.wav",
+      "narration": "Put everything in this course together and a simple question turns out to have several answers. September sales by region. The as-was answer reports each sale under the region the customer had when they bought: fifty two pounds in the North, thirty four in the South. The current view reports every sale under the customer's region today, so C two oh one's sales all move to the South. And the as-known-then answer reproduces what the report said on the first of October, before the price of ten forty two was corrected, so even the total is different: one hundred and forty four rather than one hundred and forty. Each answer needs something different from the model. As-was needs the Type two key stored on the fact. Current view needs a join through the current version. As-known-then needs a second kind of time, when each row was recorded, alongside when it was valid. That is bitemporal modelling, and Type two alone does not provide it. Being clear about which of these questions a model can answer is the outcome of this course."
+    },
+    {
+      "course": "integration",
+      "section": "bus-matrix",
+      "file": "integration/bus-matrix.wav",
+      "narration": "Once there is more than one business process, the warehouse has to decide what they share. The bus matrix is the tool for that. Each row is a process: sales, returns, inventory, fulfilment. Each column is a dimension. A tick says that the process is described by that dimension. Columns with many ticks, like date, product and location, are the ones that have to be conformed. Conformed means more than having a table with the right name. It means the same keys, the same attributes and the same meaning, wherever the dimension is used, so that sales by product and returns by product can be lined up against each other. And a tick is a claim, so check it. Here, the returns system records warehouse stock codes rather than the shop's product ids. Sales and logistics turn out to use two different lists of regions. Each needs a mapping before its tick is true. Give every conformed dimension a single named owner. Then the processes can be built one star at a time, all plugged into the same shared dimensions."
+    },
+    {
+      "course": "integration",
+      "section": "drill-across",
+      "file": "integration/drill-across.wav",
+      "narration": "Drilling across means answering one question from two processes, such as the return rate by product, which needs sales and returns together. The safe method has two steps. First, summarise each fact on its own: total sales by product, and separately, total returns by product. Then join the two small summaries on the conformed product. Mugs sold twenty seven pounds and had eighteen pounds returned, a return rate of sixty six point seven percent. Each fact keeps its own grain and its own filters, and nothing is counted twice. The tempting shortcut is to join the detailed tables directly on product. There were two mug sale lines and one mug return line. The join pairs that one return with both sales, so eighteen pounds of returns is reported as thirty six. Detailed facts from different processes have no row-to-row relationship, so there is nothing correct to join them on. And this only works on attributes that are genuinely conformed. If the two products were defined differently, the summaries would not line up at all."
+    },
+    {
+      "course": "integration",
+      "section": "normalised-integration",
+      "file": "integration/normalised-integration.wav",
+      "narration": "There is more than one place to do the integration work. One route builds a normalised integration layer first. Sources are reshaped into integrated business entities, like customer, order, order line and product, close to third normal form, so each fact is stored once. Dimensional marts are then derived from that core, and because they are derived, they can be rebuilt whenever their design changes. The core's main strength is isolation. When a source changes, the fix is made once, in the core, rather than in every mart. The other route integrates directly into conformed dimensions and facts. There are fewer layers, so the first useful model arrives sooner, and the bus matrix and the owners of each conformed dimension carry the integration discipline instead. This course only compares the two conceptually, without a full treatment of any one method. The honest comparison is about costs: change isolation and reuse on one side, against time to first delivery and the skills the team has on the other."
+    },
+    {
+      "course": "integration",
+      "section": "data-vault",
+      "file": "integration/data-vault.wav",
+      "narration": "Data Vault takes a different approach to the integration layer. It separates three things that a dimensional model keeps together. Hubs hold business keys, and nothing else: one row per customer number or order number, with when it was first loaded and from which source. Links hold relationships, one row for each pairing of hubs, such as this customer placed this order. Satellites hold the descriptive attributes, and they add a new row whenever those attributes change, which is how customer C two oh one's move from North to South is kept. Loads only ever insert, so every arrival can be traced back to its source and load time. That makes the pattern strong for audit and for absorbing changing sources. But be clear about its limits. Hashing a business key does not decide whether two keys are the same real-world customer. Keys need canonical forms before hashing, and a collision policy should exist, however rare collisions are. And people still need marts built on top to query it. The conventions shown are illustrative, not a full specification."
+    },
+    {
+      "course": "integration",
+      "section": "identity-reconciliation",
+      "file": "integration/identity-reconciliation.wav",
+      "narration": "Integration eventually meets a hard question: are these two records the same customer? The web shop has customer C two oh one, Ana Price. The marketplace has M ninety five, A. Price. Their email addresses look alike, but one has capitals and the other a leading space. Deciding they are one person is a business rule, not something a join can settle. So canonicalise first: trim the spaces and lower-case the email. Then apply a matching rule that is written down, versioned and owned by a named team. Here, both emails must match and both must be verified. When the rule matches, both source ids are mapped to one master id, M C seventeen, in a crosswalk table that also records which rule version made the match and when. Mistakes cut both ways. A false merge combines two different people's purchases and personal data. A missed match splits one customer's history in two. So matches must be reversible, with an unmerge that keeps the trail. And the same discipline applies to reference data, like regions and currency codes."
+    },
+    {
+      "course": "integration",
+      "section": "choosing-patterns",
+      "file": "integration/choosing-patterns.wav",
+      "narration": "This course has looked at three ways to integrate: a dimensional bus, a normalised core, and Data Vault. None of them wins everywhere, and claims that one always does deserve suspicion. Compare them on the same criteria. How easily can people query the result? How well is the model isolated from source changes? How traceable is every row back to its source? How quickly does the first useful model arrive, and does the team have the skills to build and run it? And who owns each shared definition? The table shows typical tendencies, not guarantees. The patterns also combine. A Data Vault or a normalised core very often feeds dimensional marts, so people query stars while the integration layer absorbs change. A dimensional bus can start small and gain a core later. Whatever the route, conformed dimensions with named owners are still needed. You can now explain cross-process consistency and justify an integration pattern against stated requirements and costs. Next, those choices decide what ingestion has to capture."
+    },
+    {
+      "course": "ingestion",
+      "section": "etl-elt-staging",
+      "file": "ingestion/etl-elt-staging.wav",
+      "narration": "Ingestion begins with a choice of where the transformation work happens. In ETL, data is extracted, transformed in a separate engine, and only the shaped result is loaded into the warehouse. In ELT, the raw data is loaded first, into a staging area inside the warehouse, and transformed there with SQL. ELT keeps a raw copy close to the models, which makes reprocessing cheap. ETL can filter or mask before anything lands, which matters when some fields should never reach the warehouse at all. Whichever route is used, there should be a clear staging boundary. On one side, the source's columns arrive untouched. The status column still says shipped in two different cases, because cleaning is a modelling decision made later, in the open. On the other side, each row gains load metadata: which source it came from, which batch, and when it was loaded. Staging is not for reports. Models read from it, and they can be rebuilt from it without extracting the source again. How long staging is kept is a deliberate decision too."
+    },
+    {
+      "course": "ingestion",
+      "section": "full-vs-incremental",
+      "file": "ingestion/full-vs-incremental.wav",
+      "narration": "There are two basic ways to copy a source. A full extract copies the whole table every time. An incremental load copies only what changed since last time. Most real pipelines use both: a full extract to establish the starting state, and then increments to keep it current. The dangerous moment is the hand-off between them. The full extract has to be consistent as of one exact point in the source's history, here log position zero slash one A one, and that position has to be recorded. Increments then start from exactly that position. Start a little later, and any change made in between is lost for good. Start a little earlier, and some changes are applied twice. Full extracts remain the right tool for small tables, and for sources that offer no change log. They also have a useful property: a row that is missing from a full extract has been deleted. Increments are for large, busy tables. Whichever you use, keep the counts and the positions, so the hand-off can be shown to be clean."
+    },
+    {
+      "course": "ingestion",
+      "section": "log-cdc",
+      "file": "ingestion/log-cdc.wav",
+      "narration": "The simplest way to find changes is to poll: select every row whose updated at timestamp is later than the last run. It has three blind spots. A deleted row is not there to be selected. Rows committed with the same timestamp as the last run can be skipped at the boundary. And it trusts every program that writes to the table to maintain the timestamp correctly. Log-based change data capture avoids all three by reading the database's own transaction log. Every committed insert, update and delete appears there, each with a log position that reflects commit order. Look at the stream as it arrived. The update to ten forty three, at position one A five, arrived before the update to ten forty four at one A four. Arrival order is not the order things happened. The log position is, so the loader orders by position, and uses it to break ties for the same key. The details vary between connectors, including how they number positions and report deletes, so read the connector's documentation for the version you run."
+    },
+    {
+      "course": "ingestion",
+      "section": "watermarks-checkpoints",
+      "file": "ingestion/watermarks-checkpoints.wav",
+      "narration": "A pipeline does not have one checkpoint. It has several, and each one promises something different. Here the source log has reached position one A nine. The connector has read up to one A six. The transport topic has delivered messages up to offset twelve eighty seven. And the ingestion job has committed batch seventy seven to staging. Now suppose the job crashes halfway through batch seventy eight. Which position do you restart from? Only the ingestion checkpoint says what was actually committed, so the job restarts after batch seventy seven and replays seventy eight. Some of seventy eight may already have been written, which is why replays must be safe to repeat, with duplicates removed by log position and key. The same care applies to any watermark. It is meaningful only if values arrive in a total order, which a log position gives and a wall clock does not. If a lower value can still arrive later, the watermark is not final. And it should advance only after the rows it covers are committed."
+    },
+    {
+      "course": "ingestion",
+      "section": "duplicates-deletes",
+      "file": "ingestion/duplicates-deletes.wav",
+      "narration": "Most change streams promise at least once delivery. That means every change arrives, but some may arrive more than once, and not always in order. Event four here is a repeat of event two: the same log position and the same key. It is not a second change. So the loader keeps one event per position and key. It also applies events in log order, so that a late arriving older event can never overwrite a newer state. Deletes need even more care, because three different things can look like one. A delete event says a row was removed from the source, and usually carries what the row looked like before. A tombstone is something else: a marker some transports use so that old messages for that key can be compacted away. And a business delete, like a cancelled order, is not a delete at all. The row still exists, with a new status. Check exactly what your connector emits before mapping any of them. And keep the source id, operation, position, batch and provenance on every staged row."
+    },
+    {
+      "course": "ingestion",
+      "section": "schema-drift",
+      "file": "ingestion/schema-drift.wav",
+      "narration": "Sources change shape, and they rarely ask first. In batch seventy nine two things changed. A new column appeared, a gift note. That is an additive change, so the load can accept it and record that the schema moved. The second change is worse. Order ten forty nine's amount arrived as text with a comma, forty nine comma zero zero, which no numeric column can accept. The tempting fixes are to fail the whole batch, or to coerce the value and move on. Failing everything holds back good rows for one bad one. Coercing silently is worse, because the guess could be forty nine or four thousand nine hundred. So the compatible rows load, and order ten forty nine goes to quarantine, with the reason it was held. Then make the gap visible. This batch is now two rows out of three complete, and anything built on it carries that flag until the gap is closed. The source owner is told, as the contract requires. And once the parser is fixed, the quarantined rows are replayed in their original order."
+    },
+    {
+      "course": "ingestion",
+      "section": "ingestion-reconciliation",
+      "file": "ingestion/ingestion-reconciliation.wav",
+      "narration": "The last part of ingestion is evidence. Every load should leave a record of what it did. The batch table keeps one row per load: which source, which range of log positions, how many rows, and how it ended, whether committed, replayed, or partial with rows held back. Keep it as long as the data it describes, because it is how a number in a report is traced back to the load that delivered it. Then reconcile. Control totals are computed on both sides, in the source and in staging: the row count, the number of distinct keys, the sum of an amount, the highest position. When they agree, you have good evidence that nothing was lost or doubled in transit. Be precise about what that does not prove. Two wrong values can cancel out in a sum. The source itself might be wrong. And if the extract's scope was wrong, both sides will agree on the wrong rows. You can now explain extract boundaries, ordering and replay, and the evidence for completeness. Next, those stable inputs feed repeatable transformation."
+    },
+    {
+      "course": "loading",
+      "section": "dependency-order",
+      "file": "loading/dependency-order.wav",
+      "narration": "A warehouse load is not one big script. It is a graph of steps, and each step runs only once everything it reads is ready. This course follows one load from end to end. At the top are the staged inputs, each identified by the batch it came from. Next come the dimensions, and they must come before the facts. When a new customer or a new product version appears, the dimension load is where its surrogate key is issued. If the facts were loaded first, they would look for keys that did not exist yet, and fall through to Unknown. Once the dimensions are done, facts resolve their keys, load, and are checked. Publication comes last, and only if the checks pass. The graph also tells you what can run at the same time. Customers and products do not depend on each other, so they can load in parallel. And when a step fails, it stops what depends on it, and nothing else. Keep the graph as code, so it is reviewed, versioned, and runs the same way every time."
+    },
+    {
+      "course": "loading",
+      "section": "deterministic-dedup",
+      "file": "loading/deterministic-dedup.wav",
+      "narration": "A transformation is deterministic when the same input always produces the same output. That property is what makes a load repeatable, and deduplication is where it most often quietly breaks. Here are four staged rows for two orders. Order ten forty three appears three times: once as packed, and twice as shipped, with the shipped event delivered twice. The goal is to keep the latest state of each order. The right query ranks rows within each order by an explicit event rule: the log position first, then a sequence number within it. That gives a total order, so exactly one row wins, and every run picks the same one. The tempting query ranks by load time instead. But all four rows arrived in the same batch, with the same load time. When the ordering ties, the database is free to return any of the tied rows, and it may choose differently on different runs. Two runs can disagree, and nobody notices. The same caution applies to current time functions, random values and limits without an ordering."
+    },
+    {
+      "course": "loading",
+      "section": "fact-key-resolution",
+      "file": "loading/fact-key-resolution.wav",
+      "narration": "Loading a fact table is mostly an exercise in key resolution. Every natural key that arrived from the source has to be replaced with the warehouse's surrogate key, and not a single row may be lost along the way. The date key comes from the calendar dimension, which is built years ahead, so every date finds its day. The customer key comes from the version of the customer that was valid on the order date, using the half-open interval from the history course. The product key is matched on the source and the product id together. Now look at the joins. The customer and product joins are left joins. If a key is not found, the row is kept, and it points at minus one, the Unknown member, instead of disappearing. An inner join would drop it silently, and totals would simply be lower. So every fact load checks that rows in equal rows out, and counts how many rows fell to Unknown. Order ten forty three has no customer. It loads, it points at minus one, and it is counted where people can see it."
+    },
+    {
+      "course": "loading",
+      "section": "incremental-history",
+      "file": "loading/incremental-history.wav",
+      "narration": "Maintaining Type two history incrementally comes down to a small, careful pattern. Each load compares the incoming records with the current version of each member, and acts only on real changes. Customer C two oh one has a new region, South, effective from the twentieth of September. The load closes the current North row by setting its end date to the twentieth and marking it not current. Then it inserts a new South row, starting on the twentieth, with a brand new surrogate key. Both statements run in one transaction, so no reader ever sees a customer with no current row, or with two. Notice the conditions. The update only fires if the region has really changed, and the insert only happens if no current row remains. That means a re-sent record changes nothing, and running the same batch twice leaves the same table. Engines differ here. Some offer a single merge statement, and its exact behaviour varies. Concurrent writers need a uniqueness rule on current rows. And back-dated changes split intervals, so test for overlaps afterwards."
+    },
+    {
+      "course": "loading",
+      "section": "idempotent-retry",
+      "file": "loading/idempotent-retry.wav",
+      "narration": "Every pipeline eventually crashes in the worst possible place. Here, batch seventy eight's fact rows have been written, and then the job dies before it can move the checkpoint forward. When it restarts, the checkpoint still says seventy seven, so batch seventy eight runs again. That is correct behaviour. The question is whether the second run is harmless. If the load is a plain insert, it appends batch seventy eight a second time, and every sale in that batch is now counted twice. If instead the load replaces batch seventy eight by key, either by deleting that batch's rows and reinserting them in one transaction, or by merging on the natural key, then the retry leaves exactly the same rows as before. That property is idempotency: running it twice has the same effect as running it once. Back it up with a unique constraint on order and line, where the engine enforces one, so a mistake fails loudly instead of doubling quietly. And define the retry unit explicitly: one batch, one partition, or one whole run."
+    },
+    {
+      "course": "loading",
+      "section": "atomic-publication",
+      "file": "loading/atomic-publication.wav",
+      "narration": "A load is only finished when readers can see it, and they should see all of it or none of it, never the half that has committed so far. There are two common ways to get that. Where the engine supports transactions across several tables, the whole publication can be one transaction: replace the batch, update the checkpoint, and commit once. The other way works almost everywhere. Build the new version of the output beside the current one, sales version forty two next to version forty one. Check the new version completely. Then switch the view that readers query from forty one to forty two, in a single step. The old version stays for comparison, and for rollback if something turns out to be wrong. Here is what does not count. The dimensions commit at ten past two, and the facts at fourteen minutes past. A report that runs at eleven minutes past joins brand new dimensions to old facts, a state that never existed. Separate commits are not one consistent snapshot. And transaction behaviour differs between engines, so verify it rather than assume it."
+    },
+    {
+      "course": "loading",
+      "section": "backfill-replay",
+      "file": "loading/backfill-replay.wav",
+      "narration": "When a correction arrives late, the past has to be rebuilt. The price fix for order ten forty two changes September, which was published days ago. The rebuild needs three disciplines. First, bound it. Rebuild exactly one partition, September, defined by the same half-open interval used everywhere else, and leave August and October alone. Second, record it. The run record states which staging batches were used as inputs, which commit of the model code ran, what the reconciliation showed, and when the result was published. With that record, anyone can reproduce the rebuild later, or explain why September's total changed. The new partition is reconciled and compared with the old one before anyone sees it, and then published as version two. Third, keep it separate from live work. October's normal loads carry on while the backfill runs. A lock on each partition ensures only one writer at a time, so a backfill can never overwrite newer results from the live pipeline. And every backfill has a named owner, and a defined end."
+    },
+    {
+      "course": "loading",
+      "section": "load-evidence",
+      "file": "loading/load-evidence.wav",
+      "narration": "The last piece of a load is the evidence it leaves behind. Back on the dependency graph, the final layer is not a table people query. It is the record of the run. Which staged batches were used as inputs, and at which log positions. Which version of the model code ran. What the checks found: row counts in and out, how many keys fell to Unknown, and whether the loaded totals matched staging. And how the run ended: published, held back, or failed, and why. This record is what turns a surprising number into an answerable question. When a total changes, the evidence shows which run changed it, with which inputs and which code. When a check fails, publication is held, and the reason is already written down. You can now construct an incremental load, reason about retries and backfills, and explain the boundary at which results are published, under the guarantees your engine actually gives. Next, those published, reconciled models are ready for analytical queries that keep their meaning."
+    },
+    {
+      "course": "semantics",
+      "section": "star-query-filters",
+      "file": "semantics/star-query-filters.wav",
+      "narration": "A typical star query does three things. It filters on dimension attributes, it joins those dimensions to the fact through their surrogate keys, and it groups the result at the grain the question asks for. Here the question is September's sales by category. The filter is on the date dimension's month. The product join is many to one, so it only adds the category to each fact row. Grouping gives one hundred and seventeen pounds for Kitchen and twenty seven for Tableware. Before trusting that, check it against a total you already know. Together they make one hundred and forty four, which is the booked September figure from the requirements course, so nothing was lost or doubled. Now add one more join, to the promotion coverage fact from the facts course. Kettles and toasters each have two promotion days, so every one of their sales rows is matched twice, and Kitchen doubles to two hundred and thirty four. Mugs were never promoted, so they have no match and vanish. One join both fanned out and filtered out. Knowing the expected total is what exposes it."
+    },
+    {
+      "course": "semantics",
+      "section": "grain-aggregation",
+      "file": "semantics/grain-aggregation.wav",
+      "narration": "Some relationships are not many to one. Order ten forty one used two promotion codes, AUTUMN and WELCOME. The order cannot point at a single promotion, so a bridge table links it to both. Now ask for sales by promotion. If the bridge is used without weights, each promotion is credited with the whole fifty two pound order. That is a legitimate answer to a specific question: what value of orders involved each promotion? But add those rows up and the promotions claim one hundred and four pounds of a fifty two pound order. So that reading must never be totalled, and the report should say so. The alternative is a weighted bridge. Each link carries a weight, and the weights for one order add up to exactly one. Here the split is equal, so each promotion is credited twenty six pounds, and the totals add back to the order. The weighting rule is a business policy, not a technical detail, so state which one is used. Test that the weights sum to one on every load, and label which reading each report shows."
+    },
+    {
+      "course": "semantics",
+      "section": "drill-paths",
+      "file": "semantics/drill-paths.wav",
+      "narration": "People rarely ask one question and stop. They see a total and want to know what is inside it, or how it compares with something else. Moving along a hierarchy covers the first. Start at the department: Home sold one hundred and forty four pounds in September. Drill down, and that splits into Kitchen at one hundred and seventeen and Tableware at twenty seven. Drill down again, to the kettle, the toaster and the mugs. Rolling up goes the other way, and each level adds up exactly to the one above it. That is only guaranteed because this product hierarchy is strict, with one parent per member. The breakfast set from the dimensions course would break it. Moving across covers the second kind of question. At the product level, sales and returns share a conformed product key, so you can step sideways from mug sales to mug returns: twenty seven pounds sold, eighteen returned. As before, each fact is summarised first and then combined. And you can only drill across at levels that both facts genuinely share."
+    },
+    {
+      "course": "semantics",
+      "section": "windows-periods",
+      "file": "semantics/windows-periods.wav",
+      "narration": "Analysts compare periods constantly, and two details decide whether the comparison is honest. The first is the calendar. A running total sums sales day by day within each month, which a window function does neatly. But which days, and whose midnight? The days should come from the date dimension, in the shop's own time zone, and fiscal periods, if the business uses them, should come from that same calendar table rather than being recomputed in each query. The second detail is completeness. Here September is complete, all thirty days. October is two days in. The naive month over month comparison puts seventy six pounds against one hundred and forty four and reports a forty seven percent fall. That is not a fall. It is two days compared with thirty. The plot makes it obvious: October is not below September's line at the same day of the month. So compare like with like, the same number of days, or wait for the month to close. And mark partial periods in the result itself, where nobody can miss it."
+    },
+    {
+      "course": "semantics",
+      "section": "metric-contracts",
+      "file": "semantics/metric-contracts.wav",
+      "narration": "By now the same word, revenue, has meant several different things. A semantic layer is the place where each metric is defined once, so that every report computes it the same way. The definition here is illustrative, because each semantic layer product has its own syntax, but the content is what matters. It names the population, the grain, the time basis and time zone, the measure, the currency conversion, and how nulls are treated. It also names an owner, and it has a version. Version two removed VAT, which version one had included. Compare that with what happens without it. Three dashboards each wrote their own formula and each called it revenue. Finance sums net amounts and gets one hundred and forty four pounds. Operations sums only shipped lines and gets one hundred and one. The executive board sums gross amounts, including VAT, and gets one hundred and seventy two pounds eighty. In a meeting those are three conflicting numbers for one word. Versioning also lets older reports state exactly which definition they used."
+    },
+    {
+      "course": "semantics",
+      "section": "nulls-and-bridges",
+      "file": "semantics/nulls-and-bridges.wav",
+      "narration": "Three things can look alike in a result and mean very different things: a null, a zero, and the absence of a related row. Here are four September orders and their refunds. Order ten forty one had eighteen pounds refunded. Order ten forty two had a return that was refused, so the refund is a real zero. Orders ten forty three and ten forty four had no return at all, so their refund is null: there is nothing to measure. The aggregates treat these differently. Count star counts four orders, but counting the refund column counts only two values, because nulls are skipped. The average refund skips nulls too, and gives nine pounds, which is the average per return. Replace the nulls with zero first, and the average becomes four pounds fifty, which is the average per order. Both are reasonable answers to different questions, so the metric contract has to say which one it means. Missing relationships behave the same way. Order ten forty three has no customer. An inner join without an Unknown member drops it silently, so show Unknown as a group of its own."
+    },
+    {
+      "course": "semantics",
+      "section": "report-validation",
+      "file": "semantics/report-validation.wav",
+      "narration": "The final test of everything in this course is simple to state. Pick any one cell in a report, and trace it back to the records behind it. Take Kitchen in September, one hundred and seventeen pounds. The cell names its metric, net merchandise revenue, version two. The metric's definition says which population, which date basis and which filters apply. Those filters select exactly three fact rows: a kettle from ten forty one, the toaster from ten forty two, and another kettle from ten forty four. They add up to one hundred and seventeen. Each row records the load batch that delivered it, and each batch records the positions it read in the web orders source. If a number is wrong, this trace is where you find out why: a wrong filter, a stale batch, a source row that never arrived. One limit is worth repeating. A semantic layer cannot repair a wrong grain underneath it. You can now explain analytical queries and locate discrepancies in grain, relationships or meaning. Next, execution evidence guides physical design."
+    },
+    {
+      "course": "physical",
+      "section": "row-vs-column",
+      "file": "physical/row-vs-column.wav",
+      "narration": "Physical design starts with how rows are laid out on storage, because that decides how much data a query has to read. Here are the same four sales rows in two layouts. In a row layout, each block holds whole rows, with every column of a row stored together. In a column layout, each block holds the values of just one column. Now run an analytical query that needs only two of the six columns: the order date and the net amount. The row layout has to read every block, and with it every column, even the four it does not need. The column layout reads only the two column blocks it needs. Over millions of rows, that difference dominates. Column layouts have a second advantage: similar values sit next to each other, so they compress well. But they are not better at everything. Writing or updating a single row touches one place in a row layout, and many places in a column layout. This picture is a concept, not any engine's actual format. PostgreSQL's default table storage is row oriented, so check what each engine really does."
+    },
+    {
+      "course": "physical",
+      "section": "partition-pruning",
+      "file": "physical/partition-pruning.wav",
+      "narration": "Partitioning splits one large table into pieces by the value of a column. Here the sales fact is partitioned by month on the order date. The benefit comes from pruning: when a query's filter rules out a partition, the engine can skip it entirely. Compare two ways of asking for September. Query A states a range directly on the order date column: on or after the first of September, and before the first of October. The engine can compare that range with each partition's bounds, so it reads September and prunes August and October. Query B asks for the same month, but wraps the column in a function that formats it as text first. Many engines cannot see through that function to the partition bounds, so they scan every partition. Both queries return exactly the same rows. Only the work is different. Choose a partition column that queries actually filter by, which is very often a date. Avoid thousands of tiny partitions, because each one carries overhead. And since pruning rules vary by engine and version, confirm it in the query plan rather than assuming it."
+    },
+    {
+      "course": "physical",
+      "section": "clustering-indexing",
+      "file": "physical/clustering-indexing.wav",
+      "narration": "Sorting, clustering and indexing are often spoken of as if they were one thing. They are three different mechanisms, and different engines offer different ones. Start with sort order. If rows are stored in date order, each storage block covers a narrow range of dates, and many engines keep each block's minimum and maximum. A filter for the fourteenth to the twenty first of September can then check those ranges and read just one block of the three. Store the same rows in the order they arrived, and every block spans almost the whole month, so every block has to be read. Clustering keeps related rows physically close together. Some engines maintain it automatically, but as new data arrives it can decay and need attention. An index is something else again: a separate structure, like a B-tree, that finds a small number of rows quickly. That suits point lookups far better than scans over a large share of a table, and every index costs storage and slows every write. So choose by the workload, and by what your engine actually supports."
+    },
+    {
+      "course": "physical",
+      "section": "distribution-skew",
+      "file": "physical/distribution-skew.wav",
+      "narration": "On a distributed engine, data is spread across several nodes, and two rows can only be joined when they are on the same node. Getting them there is where much of the cost goes. There are two common strategies. A broadcast join copies the small side, usually a dimension, to every node, so the large fact never moves. A repartition join hashes both sides by the join key and moves each row to the node responsible for its key. Broadcasting suits small dimensions. When both sides are large, repartitioning is the usual choice. Repartitioning has a weakness, and it is skew. If one key has far more rows than the others, all of them land on one node. The Unknown customer, minus one, is a classic example, because every order without a customer shares it. The chart is illustrative, but the shape is typical: three nodes finish quickly, and the query waits for the fourth. Fixes include handling the hot key separately, or salting it to spread it out. And note that a single-node plan, like PostgreSQL's, cannot show any of this movement."
+    },
+    {
+      "course": "physical",
+      "section": "aggregates-materialisation",
+      "file": "physical/aggregates-materialisation.wav",
+      "narration": "A materialised aggregate stores the answer to a common question in advance. Instead of scanning every sales line each time the dashboard opens, the dashboard reads a small table of daily totals by category. Reads become much cheaper. The price is freshness. The summary is only as current as its last refresh. Here the correction to order ten forty two landed in the fact table at ten in the morning, but the aggregate was refreshed at two in the morning. At eleven o'clock, the fact table says Kitchen sold one hundred and thirteen pounds in September, and the aggregate still says one hundred and seventeen. Both are correct as of their own time, and the dashboard shows the older one. Managing that is a design decision. Choose a full or incremental refresh based on its cost and on whether it handles corrections correctly. Trigger a refresh after corrections, not only on a schedule. Show an as of time on anything that reads the aggregate. And after each refresh, reconcile the aggregate against its base table."
+    },
+    {
+      "course": "physical",
+      "section": "plans-statistics",
+      "file": "physical/plans-statistics.wav",
+      "narration": "Every engine turns a query into a plan, and the plan is built on estimates: how many rows each step will produce, based on the statistics the engine keeps about the data. Asking for the plan alone shows those estimates. Executing it, with explain analyze in PostgreSQL, shows what actually happened beside them. This output is illustrative and shortened, from PostgreSQL eighteen, and it is not a measured run. The scan of September's partition was estimated at twelve hundred rows. It actually returned five. A gap that large usually means the statistics are stale or missing, perhaps because the partition was loaded after they were last gathered. It matters because the optimiser chooses join methods and memory based on those estimates, so a wrong estimate can produce a poor plan. Refresh the statistics and compare the plan again. Gather this evidence safely. Explain analyze really executes the statement, so use read-only queries on a disposable copy. And record the conditions, cache state, concurrency and data volume, because timings without them cannot be compared."
+    },
+    {
+      "course": "physical",
+      "section": "cost-tradeoffs",
+      "file": "physical/cost-tradeoffs.wav",
+      "narration": "Every physical design choice spends something: compute, storage, freshness, or the time of the people running it. This last example makes one of those trade-offs concrete with simple arithmetic rather than a benchmark. The number of refreshes per day is fourteen hundred and forty minutes divided by the minutes between refreshes. Refreshing hourly means twenty four runs a day. Refreshing every fifteen minutes means ninety six, four times as many. Whatever each run costs under your platform's billing model, the second option costs roughly four times as much in refresh work. So start from the need. The sales dashboard's owners said the data must be no more than two hours old. Hourly meets that. Every fifteen minutes meets it too, but spends four times the runs for freshness nobody asked for. Nightly is cheapest and does not meet it. Judge any optimisation the same way: against a real workload, a stated target and a known billing model, measured before and after under the same conditions. You can now justify a physical change with evidence, rather than a universal rule."
+    },
+    {
+      "course": "governance",
+      "section": "quality-layers",
+      "file": "governance/quality-layers.wav",
+      "narration": "Data quality is not one test at the end. Each check belongs at the layer where its problem can first be seen, and where a failure can actually be acted on. In staging, the checks are about arrival: do the counts agree with the source, and does every value parse to its type? In integration, they are about structure: are keys unique at the declared grain, and do the Type two intervals have no overlaps and no gaps? In serving, they are about use: does every foreign key resolve, and is the data fresh enough for its target? And at the business layer, the checks compare against the outside world, such as whether September's revenue matches the finance ledger within an agreed tolerance. Every check also declares a severity. Duplicate keys block publication, because every total built on them would be wrong. Late data might publish with a stale flag. An unusual trend goes to its owner to investigate, because unusual is not the same as wrong. A check that has never failed may not be testing anything. And every failure names the person who acts on it."
+    },
+    {
+      "course": "governance",
+      "section": "anomaly-investigation",
+      "file": "governance/anomaly-investigation.wav",
+      "narration": "One morning the finance dashboard shows September revenue at one hundred and forty pounds. Yesterday it said one hundred and forty four. The tempting reaction is to call it bad data and start patching. Investigate first. Most anomalies have a cause, and the evidence built up in earlier courses is how you find it. Lineage shows which inputs and models feed that tile. The load evidence shows whether any run failed, or any rows went missing: here the runs were green, and the control counts agreed. The metric version shows whether the definition itself moved: it is still version two. And the source versions show whether anything was corrected upstream. That is where the answer is. The web shop corrected the price of order ten forty two from forty nine pounds to forty five, and September was restated as version two. The data was not bad. It was more accurate than before. Record the finding where the next person will look for it, and tell the people who had already seen, and perhaps used, the old number."
+    },
+    {
+      "course": "governance",
+      "section": "metadata-lineage",
+      "file": "governance/metadata-lineage.wav",
+      "narration": "There are two kinds of metadata, and a warehouse needs both. Technical lineage shows where a number came from. The revenue tile on the finance dashboard reads from the sales fact. The sales fact was built by a specific commit of the model code, from specific staging batches. Those batches came from the web shop's orders table. Because this lineage is built from code and load logs, rather than drawn by hand, it can stay current as the platform changes. But lineage cannot say what the number means. That is the job of business metadata. A glossary entry says what net merchandise revenue counts: booked lines, net of VAT, in pounds, with returns as a separate metric. It records the metric's version, and what changed between versions. And it names who is accountable: an owner who decides the definition, a steward who looks after it day to day, and a place where people can ask questions. The two kinds are linked through the metric's name, so anyone looking at the tile can reach both its origin and its meaning."
+    },
+    {
+      "course": "governance",
+      "section": "ownership-contracts",
+      "file": "governance/ownership-contracts.wav",
+      "narration": "Every asset in the warehouse, a source table, a model, a metric, needs a named owner: someone who answers for it. The catalogue is where that is written down. For each asset it records the owning team, the steward who looks after it day to day, whether a contract exists, and how much notice a change requires. Lineage adds the list of consumers, the people and reports that depend on it. And a simple test applies: an owner nobody can reach is not really an owner. Contracts matter most when something has to change. Suppose someone wants to drop the region column from the sales fact. Under a contract, that is proposed rather than just done. The steward uses lineage to see what would break. Consumers are told in advance, here thirty days. The new version is released alongside the old one, so both run in parallel for a while. And the old version is retired only once its consumers have moved across. That process is slower than editing a table, and the slowness is the point: nobody's report breaks overnight without warning."
+    },
+    {
+      "course": "governance",
+      "section": "least-privilege",
+      "file": "governance/least-privilege.wav",
+      "narration": "Least privilege means each role gets only the access its work needs, and in a warehouse the boundaries follow the layers. The loader writes to staging, and nothing else. The modeller reads staging and writes marts. The analyst reads marts, and here a row policy restricts the North analyst to North rows. The admin can do everything, which is exactly why admin access is kept rare and logged. Row security in PostgreSQL eighteen is a good labelled example of how such a policy works, and of its edges. The policy filters rows for a role, here where the region is North. But the table's owner bypasses it, unless row security is forced on the table. Superusers, and roles with the bypass attribute, always bypass it. So a policy tested as an admin will appear to show everything, and prove nothing. Test as the real role. Finally, four controls are often confused. A view filters what is asked for. A row policy filters per role. Masking hides values that are shown. Encryption protects stored bytes. They solve different problems."
+    },
+    {
+      "course": "governance",
+      "section": "sensitive-data",
+      "file": "governance/sensitive-data.wav",
+      "narration": "Sensitive values travel further than anyone plans. Follow one synthetic email address through the platform. Staging holds it raw, exactly as the source sent it. The customer dimension keeps it, because identity matching needs it. The marts mask it for analysts. An export once sent it to a marketing agency. The query logs captured it too, because someone filtered on it directly. And every backup taken since then holds a copy until that backup expires. Now a deletion request arrives for this customer. Deleting the row from the customer dimension handles one copy out of six. Each copy needs its own deletion route, and its own check that the deletion really happened: a count of zero in staging, a search of the logs, a signed confirmation from the agency. Backups usually cannot be edited, so they expire on their schedule, and restore procedures must make sure the deleted value is not brought back. How each step is enforced depends on the platform, so verify it there. And this is the shape of a policy, not legal guidance."
+    },
+    {
+      "course": "governance",
+      "section": "audit-sharing",
+      "file": "governance/audit-sharing.wav",
+      "narration": "Sometimes data has to leave the team, for example to a partner running a joint promotion. Controlled sharing keeps that narrow, temporary and recorded. Narrow means sharing the least that serves the purpose: weekly sales by category, already aggregated, with no customer columns at all. Temporary means the share has a stated purpose and an expiry date, after which it stops working, and the terms forbid passing it on. Recorded means it is granted to a service identity rather than to someone's personal login, and every read is logged. That leads to audit evidence. When an auditor asks, you should be able to show three things quickly. The grants: who can read what, as of today. The reviews: evidence that access is re-certified on a schedule, so old grants do not linger. And the logs: every read, kept, and protected from being edited. You can now explain layered quality and governance controls, identify where they can be bypassed or do not reach, and trace responsibility and evidence. Next, those controls meet real failures in operation."
+    },
+    {
+      "course": "operations",
+      "section": "orchestration-slos",
+      "file": "operations/orchestration-slos.wav",
+      "narration": "The last course is about running the warehouse, and it opens with a common trap. It is Monday morning, and every job in the orchestrator finished green: ingestion, models, publication. By the orchestrator's measure, the night went perfectly. Now look at the data product. The sales mart only contains data up to seven o'clock on Sunday evening. The marketplace source never arrived at all. The checks that did run passed, because nothing in the data that arrived was wrong. Users opening the dashboard will see flat sales, and nothing tells them anything is amiss. So service objectives belong on the product, in terms its users would notice. Fresh to within two hours by seven in the morning. All sources loaded. No blocking check failures. And when an objective is missed, users are told within thirty minutes. Each objective is measured on the data itself, not on job status, and each has an owner and an alert. The orchestrator runs the graph. The objectives judge whether the result is fit for use."
+    },
+    {
+      "course": "operations",
+      "section": "incident-diagnosis",
+      "file": "operations/incident-diagnosis.wav",
+      "narration": "Finance reports that sales look flat this morning. The dashboard is stale, but stale only tells you that something, somewhere, is late. The fastest diagnosis measures each stage from the source to the screen. The source is fine: orders were arriving normally until a few minutes ago. Capture is not. The connector stopped reading at two minutes past seven on Sunday evening, and has been stuck ever since. That is the root cause. Downstream, transformation and publication did exactly what they were told, on the data they were given, which is why every job was green. And the dashboard's own cache adds up to an hour on top of whatever it receives. This only works if every stage reports its own freshness, so build that measurement in. Recovery follows the patterns from earlier courses: restart the connector, replay from the last committed position, and republish. Tell users what was affected and when it was fixed. Then close the gap that let it happen: an alert on capture lag. And write the timeline down while it is still fresh."
+    },
+    {
+      "course": "operations",
+      "section": "backup-restore",
+      "file": "operations/backup-restore.wav",
+      "narration": "Recovery depends on what failed. If a load is interrupted, storage is intact. The idempotent load from the loading course simply reruns from the last committed batch, and nothing needs restoring. If storage itself is lost, rerunning is not enough, because there is nothing left to rerun into. You restore the latest backup, and then replay the changes made since it was taken. Two objectives describe what is acceptable. The recovery point objective is how much data may be lost: here, at most an hour. The recovery time objective is how quickly service must return: here, within four hours. These targets mean nothing until a restore test shows them. The last test restored to a point forty minutes old, then replayed to the present, and was back in service in just over three hours. Keep backups genuinely separate, in another region, with separate access. And be clear about what is not an independent backup: a replayable source, which keeps its logs only for a limited time, or time travel inside the very system that just failed."
+    },
+    {
+      "course": "operations",
+      "section": "schema-metric-evolution",
+      "file": "operations/schema-metric-evolution.wav",
+      "narration": "A warehouse that serves people for years will change, and there are two kinds of change to manage. A schema change moves the shape of the data: a new channel column, or a column renamed from region to sales region. Done carefully, with versions and notice, the numbers people see stay the same. A metric change moves the meaning. Revenue version one counted gross amounts, including VAT. Version two counts net amounts. Every revenue number people have ever seen will change, so this is the one they feel. Release it like this. Run both versions in parallel over the same data. September comes out at one hundred and seventy two pounds eighty under version one, and one hundred and forty four under version two, a ratio of zero point eight three three. Every difference must be explained before the switch, and here it is: VAT at twenty percent. If a gap cannot be explained, there is no switch. Tell users what is changing and when. And keep version one available for a release, so that a rollback is possible if something was missed."
+    },
+    {
+      "course": "operations",
+      "section": "migration-parallel-run",
+      "file": "operations/migration-parallel-run.wav",
+      "narration": "Moving a warehouse to a new platform is one of the riskiest changes there is, and the safest way to do it is a parallel run. The same staged batches feed both the current platform and the new one. Users stay on the current platform, while the new one runs in shadow. Then the outputs are compared: each metric, for each period, at each grain. Most of the comparison here agrees exactly: the row counts, total revenue, revenue for Kitchen. But the average refund does not. The current platform says nine pounds, and the new one says four pounds fifty. That is the null handling from the semantics course. The new platform's model treated a missing refund as zero, and so averaged over every order instead of every return. No unit test caught it. The diff did. So fix it, and then run cleanly through agreed cycles, such as two month ends, before cutting over. The cutover itself has written criteria and a date. And the old platform is kept read-only for a while, so there is a way back."
+    },
+    {
+      "course": "operations",
+      "section": "end-to-end-review",
+      "file": "operations/end-to-end-review.wav",
+      "narration": "Across twelve courses, one retailer's pipeline has been built from end to end. Sources with contracts. Change capture into staging. Dimensions, facts and history. Repeatable loads and safe publication. Shared metric definitions. Reports and shares with governed access. The last step is to review it as a whole, with evidence rather than intentions. Ask how late corrections are handled, and who is told. Ask whether a deletion really reaches every copy, backups included. Ask whether access is least privilege, and whether it was tested as the real roles. Ask whether freshness is being bought on purpose, or by accident. Ask when a restore was last tested, and whether users hear about changes before they find them. Then keep practising, because completing a course is not the same as being ready to operate a warehouse. Redesign one model. Run a small failure case end to end. Change a metric through a parallel run. Restore a disposable copy and reconcile the replayed history. From here, companion study in SQL, dbt, platform engineering or specialist modelling builds on this foundation."
+    }
+  ]
+}
